@@ -1,4 +1,3 @@
-const { generateKeySync } = require('crypto');
 const redis = require('redis');
 const { promisify } = require('util');
 
