@@ -21,10 +21,10 @@ class DBClient {
     return !!this.db;
   }
   async nbUsers() {
-    return this.users.countDocuments();
+    return await this.users.countDocuments();
   }
   async nbFiles() {
-    return this.files.countDocuments();
+    return await this.files.countDocuments();
   }
 }
 
