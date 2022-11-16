@@ -3,7 +3,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 const router = require('./routes/index');
 
-
+app.use(express.json());
 app.use(router);
 
 app.listen(port, () => {
