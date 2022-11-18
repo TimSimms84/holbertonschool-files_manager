@@ -78,7 +78,7 @@ class FilesController {
     const file = await Mongo.files.findOne({
       _id: new mongodb.ObjectId(request.params.id),
     });
-    if (!file || curUserToken !== file.userId) {
+    if (!file || curUserToken.toString() !== file.userId.toString()) {
       return response.status(404).json({ error: 'Not found' });
     }
     return response.json({ ...file });
