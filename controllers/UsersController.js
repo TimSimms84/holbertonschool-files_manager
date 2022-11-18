@@ -30,7 +30,7 @@ class UsersContoller {
       return response.status(401).json({ error: 'Unauthorized' });
     }
     const curUser = await Mongo.users.findOne({ _id: new mongodb.ObjectId(curUserToken) });
-    return response.status(201).json({ id: curUser._id, email: curUser.email });
+    return response.status(200).json({ id: curUser._id, email: curUser.email });
   }
 }
 
