@@ -54,18 +54,66 @@ class FilesController {
     const dataDecoded = Buffer.from(req.body.data, 'base64').toString('utf-8');
     await fs.promises.writeFile(localPath, dataDecoded);
     newFile = await Mongo.files.insertOne({
-      userId: new mongodb.ObjectId(curUserToken),
-      name,
-      type,
-      isPublic,
-      parentId,
-      localPath
-    });
-  }
+        userId: new mongodb.ObjectId(curUserToken),
+        name,
+        type,
+        isPublic,
+        parentId,
+        localPath
+      });
+    }
     return res.status(201).send({
       id: newFile.insertedId, userId: curUserToken, name, type, isPublic, parentId,
     });
-}
+  }
+
+  static async getShow(request, response) {
+    const token = request.header('X-Token');
+    const authToken = `auth_${token}`;
+    const curUserToken = await Redis.get(authToken);
+    if (!curUserToken) {
+      return response.status(401).json({ error: 'Unauthorized' });
+    }
+    const file = await Mongo.files.findOne({
+      _id: new mongodb.ObjectId(request.params.id)
+    });
+    if (!file || curUserToken != file.userId) {
+      return response.status(404).json({ error: 'Not found' });
+    }
+    return response.json({ ...file });
+  }
+
+  static async getIndex(request, response) {
+    const token = request.header('X-Token');
+    const authToken = `auth_${token}`;
+    const curUserToken = await Redis.get(authToken);
+    if (!curUserToken) {
+      return response.status(401).json({ error: 'Unauthorized' });
+    }
+    const { parentId, page = 0 } = request.query;
+    let fileList;
+    if (parentId) {
+      fileList = await Mongo.files.aggregate([
+        { $match: { parentId: new mongodb.ObjectId(parentId) } },
+        { $skip: page * 20 },
+        { $limit: 20 },
+      ]).toArray();
+    } else {
+      fileList = await Mongo.files.aggregate([
+        { $match: { userId: new mongodb.ObjectId(new mongodb.ObjectId(curUserToken)) } },
+        { $skip: page * 20 },
+        { $limit: 20 },
+      ]).toArray();
+    }
+    return response.json(fileList.map((file) => ({
+      id: file._id,
+      userId: file.userId,
+      name: file.name,
+      type: file.type,
+      isPublic: file.isPublic,
+      parentId: file.parentId,
+    })))
+  }
 }
 
 module.exports = FilesController;
