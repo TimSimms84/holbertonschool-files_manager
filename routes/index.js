@@ -1,10 +1,10 @@
 const express = require('express');
 const AppController = require('../controllers/AppController');
 const UsersController = require('../controllers/UsersController');
-const AuthController = require('../controllers/AuthController')
-const FilesController = require('../controllers/FilesController.js')
+const AuthController = require('../controllers/AuthController');
+const FilesController = require('../controllers/FilesController');
 
-// Create a new router 
+// Create a new router
 const router = express.Router();
 // GETs
 router.get('/status', AppController.getStatus);

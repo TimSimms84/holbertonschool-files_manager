@@ -15,19 +15,21 @@ class DBClient {
         this.users = this.db.collection('users');
         this.files = this.db.collection('files');
       }
-    })      
+    });
   }
+
   isAlive() {
     return !!this.db;
   }
+
   async nbUsers() {
     return this.users.countDocuments();
   }
+
   async nbFiles() {
     return this.files.countDocuments();
   }
 }
-
 
 const dbClient = new DBClient();
 module.exports = dbClient;
