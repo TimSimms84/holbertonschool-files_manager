@@ -9,9 +9,7 @@ class RedisClient {
 		});
 	}
 	isAlive() {
-		if (this.client.ping)
-			return true;
-		return false;
+		return this.client.connected;
 	};
 	async get(key) {
 		const getKey = promisify(this.client.get).bind(this.client);
