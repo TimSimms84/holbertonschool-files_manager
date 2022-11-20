@@ -173,8 +173,8 @@ class FilesController {
     const token = request.header('X-Token');
     const authToken = `auth_${token}`;
     const curUserToken = await Redis.get(authToken);
-    const curUserString = curUserToken.toString();
-    if (!file || (!file.isPublic && (!curUserToken || file.userId.toString() !== curUserString))) {
+    if (!file || (!file.isPublic && (!curUserToken
+      || file.userId.toString() !== curUserToken.toString()))) {
       return response.status(404).json({ error: 'Not found' });
     }
     if (file.type === 'folder') {
