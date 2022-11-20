@@ -170,17 +170,19 @@ class FilesController {
     const file = await Mongo.files.findOne({
       _id: new mongodb.ObjectId(request.params.id),
     });
-    if (!file || !fs.existsSync(file.localPath)) {
-      return response.status(404).json({ error: 'Not found' });
-    }
     const token = request.header('X-Token');
     const authToken = `auth_${token}`;
     const curUserToken = await Redis.get(authToken);
-    if (!file.isPublic && (!curUserToken || file.userId.toString() !== curUserToken.toString())) {
+    const curUserString = curUserToken.toString();
+    if (!file || (!file.isPublic && (!curUserToken || file.userId.toString() !== curUserString))) {
       return response.status(404).json({ error: 'Not found' });
     }
     if (file.type === 'folder') {
-      return response.status(400).json({ error: `A folder doesn't have content` });
+      console.log('Its a public folder');
+      return response.status(400).json({ error: "A folder doesn't have content" });
+    }
+    if (!fs.existsSync(file.localPath)) {
+      return response.status(404).json({ error: 'Not found' });
     }
     const fileData = fs.readFileSync(file.localPath);
     return response.status(200).send(fileData);
