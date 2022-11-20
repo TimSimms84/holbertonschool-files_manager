@@ -178,7 +178,6 @@ class FilesController {
       return response.status(404).json({ error: 'Not found' });
     }
     if (file.type === 'folder') {
-      console.log('Its a public folder');
       return response.status(400).json({ error: "A folder doesn't have content" });
     }
     if (!fs.existsSync(file.localPath)) {
