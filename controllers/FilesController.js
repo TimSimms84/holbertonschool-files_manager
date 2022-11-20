@@ -165,6 +165,26 @@ class FilesController {
       parentId: file.parentId,
     });
   }
+
+  static async getFile(request, response) {
+    const file = await Mongo.files.findOne({
+      _id: new mongodb.ObjectId(request.params.id),
+    });
+    if (!file || !fs.existsSync(file.localPath)) {
+      return response.status(404).json({ error: 'Not found' });
+    }
+    const token = request.header('X-Token');
+    const authToken = `auth_${token}`;
+    const curUserToken = await Redis.get(authToken);
+    if (!file.isPublic && (!curUserToken || file.userId.toString() !== curUserToken.toString())) {
+      return response.status(404).json({ error: 'Not found' });
+    }
+    if (file.type === 'folder') {
+      return response.status(400).json({ error: `A folder doesn't have content` });
+    }
+    const fileData = fs.readFileSync(file.localPath);
+    return response.status(200).send(fileData);
+  }
 }
 
 module.exports = FilesController;
