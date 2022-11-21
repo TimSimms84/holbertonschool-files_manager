@@ -1,8 +1,10 @@
 const mongodb = require('mongodb');
 const { v4: uuid } = require('uuid');
 const fs = require('fs');
+const Bull = require('bull');
 const Mongo = require('../utils/db');
 const Redis = require('../utils/redis');
+const Worker = require('../worker');
 
 class FilesController {
   static async postUpload(req, res) {
@@ -46,6 +48,7 @@ class FilesController {
         isPublic,
         parentId,
       });
+      await Worker.addThumbs(newFile);
     } else {
       const FOLDER_PATH = process.env.FOLDER_PATH || '/tmp/files_manager';
       if (!fs.existsSync(FOLDER_PATH)) {
@@ -62,6 +65,16 @@ class FilesController {
         parentId,
         localPath,
       });
+      if (type === 'image') {
+        console.log('in the mainframe');
+        const fileQueue = new Bull('fileQueue');
+        await fileQueue.add({
+          userId: newFile.userId,
+          fileId: newFile._id,
+        });
+        Worker.addThumbs(newFile);
+        Worker.getThumbs();
+      }
     }
     return res.status(201).send({
       id: newFile.insertedId, userId: curUserToken, name, type, isPublic, parentId,
@@ -182,6 +195,11 @@ class FilesController {
     }
     if (!fs.existsSync(file.localPath)) {
       return response.status(404).json({ error: 'Not found' });
+    }
+    if (file.type === 'image' && request.params.size) {
+      const filePath = `${file.localPath}_${request.params.size}`;
+      const imageData = fs.readFileSync(filePath);
+      return response.status(200).send(imageData);
     }
     const fileData = fs.readFileSync(file.localPath);
     return response.status(200).send(fileData);
